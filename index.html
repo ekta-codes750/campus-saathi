@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Saathi – Your campus, Your safety</title>
+  <meta name="description" content="Campus Saathi is the modern smart campus navigation and student safety platform. Find Your Way. Feel Safer. Speak Up.">
+
+  <!-- Favicon / Shield Icon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230D9488'><path d='M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3zm0 4a3 3 0 110 6 3 3 0 010-6zm0 14.1c-2.7-1.12-4.9-3.7-5.7-6.9 1.4-.7 3.3-1.2 5.7-1.2s4.3.5 5.7 1.2c-.8 3.2-3 5.78-5.7 6.9z'/></svg>">
+
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6.5 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/map.css">
+
+  <!-- Optional Firebase SDK (v8 Compat for reliable drop-in) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+</head>
+<body>
+
+  <!-- ====================================================
+       SITE HEADER & STICKY NAVBAR
+       ==================================================== -->
+  <header class="site-header">
+    <div class="container navbar-inner">
+      <!-- Brand Logo -->
+      <a href="#home" class="brand-link" onclick="window.campusApp.navigateToTab('home')">
+        <div class="brand-icon-shield">
+          <img src="assets/icons/logo.svg" alt="Campus Saathi Shield" style="width:28px; height:28px;">
+        </div>
+        <div class="brand-text-block">
+          <div class="brand-name">Campus <span>Saathi</span></div>
+          <span class="brand-tagline">Your campus, Your safety</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Menu -->
+      <nav class="desktop-nav" aria-label="Main Navigation">
+        <a href="#home" class="nav-link active" data-tab="home"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="#navigation" class="nav-link" data-tab="navigation"><i class="fa-solid fa-compass"></i> Navigation</a>
+        <a href="#safety" class="nav-link" data-tab="safety"><i class="fa-solid fa-shield-heart"></i> Campus Safety</a>
+        <a href="#antiragging" class="nav-link" data-tab="antiragging"><i class="fa-solid fa-scale-balanced"></i> Anti-Ragging</a>
+        <a href="#dashboard" class="nav-link" data-tab="dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        <a href="#admin" class="nav-link" data-tab="admin"><i class="fa-solid fa-user-shield"></i> Admin</a>
+        <a href="#about" class="nav-link" data-tab="about"><i class="fa-solid fa-circle-info"></i> About</a>
+        <a href="#contact" class="nav-link" data-tab="contact"><i class="fa-solid fa-envelope"></i> Contact</a>
+      </nav>
+
+      <!-- Right Header Actions -->
+      <div class="header-actions">
+        <!-- Quick Guide button -->
+        <button type="button" class="btn btn-outline btn-sm" onclick="window.campusApp.openUserGuide()" title="Campus Saathi Guide">
+          <i class="fa-solid fa-circle-question"></i> Guide
+        </button>
+
+        <!-- Prominent Emergency SOS Button -->
+        <button type="button" class="btn-sos-nav btn-trigger-sos" aria-label="Open Emergency SOS Panel">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>EMERGENCY SOS</span>
+        </button>
+
+        <!-- User / Role Indicator -->
+        <div id="nav-user-indicator"></div>
+
+        <!-- Mobile Menu Toggle Button -->
+        <button type="button" class="btn-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle Navigation Menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Menu Drawer -->
+  <div class="mobile-drawer" id="mobile-menu-drawer">
+    <div class="mobile-drawer-header">
+      <div class="brand-name">Campus <span>Saathi</span></div>
+      <button class="btn-icon" id="mobile-menu-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <nav class="drawer-nav">
+      <a href="#home" class="nav-link" data-tab="home"><i class="fa-solid fa-house"></i> Home</a>
+      <a href="#navigation" class="nav-link" data-tab="navigation"><i class="fa-solid fa-compass"></i> Navigation</a>
+      <a href="#safety" class="nav-link" data-tab="safety"><i class="fa-solid fa-shield-heart"></i> Campus Safety</a>
+      <a href="#antiragging" class="nav-link" data-tab="antiragging"><i class="fa-solid fa-scale-balanced"></i> Anti-Ragging</a>
+      <a href="#dashboard" class="nav-link" data-tab="dashboard"><i class="fa-solid fa-gauge-high"></i> Student Dashboard</a>
+      <a href="#admin" class="nav-link" data-tab="admin"><i class="fa-solid fa-user-shield"></i> Admin Panel</a>
+      <a href="#about" class="nav-link" data-tab="about"><i class="fa-solid fa-circle-info"></i> About</a>
+      <a href="#contact" class="nav-link" data-tab="contact"><i class="fa-solid fa-envelope"></i> Contact</a>
+    </nav>
+    <div style="margin-top:auto; padding-top:1.5rem;">
+      <button type="button" class="btn btn-danger btn-trigger-sos" style="width:100%;">
+        <i class="fa-solid fa-triangle-exclamation"></i> Trigger Emergency SOS
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Floating SOS Button -->
+  <button type="button" class="floating-sos-trigger btn-trigger-sos" aria-label="Trigger SOS">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+  </button>
+
+  <!-- Emergency Banner Ticker -->
+  <div class="emergency-ticker-bar">
+    <div class="container ticker-inner">
+      <span class="ticker-label"><i class="fa-solid fa-shield-halved"></i> Safety Alert</span>
+      <span class="ticker-text">24x7 Campus Security Patrol active. Night escort service available from Central Library to Main Gate. Toll-Free Anti-Ragging Helpline: 1800-180-5522.</span>
+      <button class="btn btn-outline btn-xs btn-trigger-sos" style="flex-shrink:0; background:rgba(255,255,255,0.15); color:#FFF; border-color:rgba(255,255,255,0.3);">
+        <i class="fa-solid fa-phone"></i> 24x7 Control Room
+      </button>
+    </div>
+  </div>
+
+  <!-- ====================================================
+       MAIN CONTENT CONTAINER (SPA SECTIONS)
+       ==================================================== -->
+  <main id="main-content">
+
+    <!-- ================================================
+         1. HOME PAGE SECTION
+         ================================================ -->
+    <section id="section-home" class="app-section">
+      <!-- Hero Section -->
+      <div class="hero-section">
+        <div class="container">
+          <div class="hero-grid">
+            <div class="hero-content">
+              <div class="hero-slogan-badge">
+                <i class="fa-solid fa-shield-halved"></i> Find Your Way. Feel Safer. Speak Up.
+              </div>
+              <h1 class="hero-title">
+                Campus <span class="gradient-text">Saathi</span>
+              </h1>
+              <div class="hero-tagline-text">"Your campus, Your safety"</div>
+              <p class="hero-desc">
+                The comprehensive digital safety and smart navigation platform empowering students, faculty, and visitors. Seamlessly navigate university buildings, discover verified well-lit walking corridors, instantly summon 24x7 emergency response, and confidentially report incidents.
+              </p>
+
+              <div class="hero-cta-group">
+                <button type="button" class="btn btn-primary btn-lg" onclick="window.campusApp.navigateToTab('navigation')">
+                  <i class="fa-solid fa-map-location-dot"></i> Explore Campus
+                </button>
+                <button type="button" class="btn btn-navy btn-lg" onclick="window.campusApp.navigateToTab('navigation')">
+                  <i class="fa-solid fa-diamond-turn-right"></i> Find a Route
+                </button>
+                <button type="button" class="btn btn-outline btn-lg" onclick="window.campusApp.openUserGuide()">
+                  <i class="fa-solid fa-book-open"></i> User Guide
+                </button>
+                <button type="button" class="btn btn-outline btn-lg btn-trigger-sos">
+                  <i class="fa-solid fa-life-ring" style="color:var(--danger)"></i> Get Help
+                </button>
+              </div>
+
+              <div class="hero-stats-row">
+                <div class="hero-stat-item">
+                  <span class="hero-stat-number">10+</span>
+                  <span class="hero-stat-label">Mapped Buildings</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-number">100%</span>
+                  <span class="hero-stat-label">Lit Corridors Mapped</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-number">&lt; 3 min</span>
+                  <span class="hero-stat-label">Security Dispatch</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-number">Statutory</span>
+                  <span class="hero-stat-label">Anti-Ragging Protection</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hero Visual Interactive Card -->
+            <div class="hero-visual-card">
+              <div class="visual-card-header">
+                <div class="status-live-pill">
+                  <span class="pulse-circle"></span> Live Campus Safety Grid
+                </div>
+                <span style="font-size:0.8rem; color:var(--slate-400);"><i class="fa-solid fa-location-dot"></i> University Campus</span>
+              </div>
+
+              <div class="hero-mini-map-preview" onclick="window.campusApp.navigateToTab('navigation')" style="cursor:pointer;" title="Click to open interactive map">
+                <div class="map-grid-decor"></div>
+                <svg class="preview-route-svg" viewBox="0 0 320 200">
+                  <path d="M 40 160 Q 110 130 160 100 T 280 40" fill="none" stroke="#0D9488" stroke-width="4" stroke-dasharray="8 6" />
+                  <circle cx="40" cy="160" r="8" fill="#10B981" stroke="#FFF" stroke-width="2" />
+                  <circle cx="280" cy="40" r="8" fill="#EF4444" stroke="#FFF" stroke-width="2" />
+                  <circle cx="160" cy="100" r="6" fill="#3B82F6" stroke="#FFF" stroke-width="2" />
+                  <text x="50" y="175" fill="#CBD5E1" font-size="11" font-weight="bold">Main Gate</text>
+                  <text x="210" y="32" fill="#CBD5E1" font-size="11" font-weight="bold">CS Block</text>
+                  <text x="140" y="85" fill="#2DD4BF" font-size="10">Well-Lit Spine</text>
+                </svg>
+                <div class="map-preview-tag">
+                  <i class="fa-solid fa-arrow-pointer"></i> Interactive Map Preview
+                </div>
+              </div>
+
+              <div class="visual-card-features">
+                <div class="v-feature-item"><i class="fa-solid fa-person-walking"></i> Turn-by-Turn Walking</div>
+                <div class="v-feature-item"><i class="fa-solid fa-lightbulb"></i> Night Well-Lit Overlay</div>
+                <div class="v-feature-item"><i class="fa-solid fa-shield-halved"></i> 24x7 Security Kiosks</div>
+                <div class="v-feature-item"><i class="fa-solid fa-phone-volume"></i> One-Tap SOS Dispatch</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Four Core Feature Cards -->
+      <div class="section-spacing">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-tag"><i class="fa-solid fa-cubes"></i> Core Campus Pillars</span>
+            <h2 class="section-title">Engineered for Navigation &amp; Student Safety</h2>
+            <p class="section-subtitle">A modern, integrated campus ecosystem ensuring every student walks with confidence and has immediate access to assistance.</p>
+          </div>
+
+          <div class="features-grid">
+            <!-- Feature 1: Smart Navigation -->
+            <div class="feature-card" onclick="window.campusApp.navigateToTab('navigation')">
+              <div class="feature-icon-wrapper">
+                <i class="fa-solid fa-compass"></i>
+              </div>
+              <h3 class="feature-title">Smart Campus Navigation</h3>
+              <p class="feature-desc">Interactive OpenStreetMap with searchable buildings, Dijkstra walking routing, distance metrics, and step-by-step guidance between campus facilities.</p>
+              <span class="feature-link">Explore Map <i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+
+            <!-- Feature 2: Safe Routes -->
+            <div class="feature-card card-safety" onclick="window.campusApp.navigateToTab('safety')">
+              <div class="feature-icon-wrapper">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <h3 class="feature-title">Verified Safe Corridors</h3>
+              <p class="feature-desc">Prioritize designated illuminated corridors, CCTV monitored avenues, verified security kiosks, and community-reported infrastructure fixes.</p>
+              <span class="feature-link">View Safe Paths <i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+
+            <!-- Feature 3: Emergency SOS -->
+            <div class="feature-card card-sos btn-trigger-sos">
+              <div class="feature-icon-wrapper">
+                <i class="fa-solid fa-bell"></i>
+              </div>
+              <h3 class="feature-title">Instant Emergency SOS</h3>
+              <p class="feature-desc">Immediate one-tap assistance panel, 2-step verification, real acoustic siren synthesizer, one-touch security call, and live GPS broadcast.</p>
+              <span class="feature-link">Test SOS Panel <i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+
+            <!-- Feature 4: Anti-Ragging Support -->
+            <div class="feature-card card-antiragging" onclick="window.campusApp.navigateToTab('antiragging')">
+              <div class="feature-icon-wrapper">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </div>
+              <h3 class="feature-title">Anti-Ragging Support</h3>
+              <p class="feature-desc">Confidential incident reporting compliant with statutory UGC guidelines. Anonymous submission, evidence attachment, and tracking reference code.</p>
+              <span class="feature-link">Speak Up Now <i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+          </div>
+
+          <!-- Safety Pledge Banner -->
+          <div class="safety-pledge-banner">
+            <div class="pledge-text-content">
+              <h3>Our Collective Safety Pledge</h3>
+              <p>"Every member of our university community has an undeniable right to an inclusive, secure, and harassment-free academic journey. Campus Saathi bridges navigation and security."</p>
+            </div>
+            <button class="btn btn-primary btn-lg" onclick="window.campusApp.navigateToTab('dashboard')">
+              <i class="fa-solid fa-id-card"></i> Student Safety Portal
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         2. SMART CAMPUS NAVIGATION SECTION
+         ================================================ -->
+    <section id="section-navigation" class="app-section hidden section-spacing">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag"><i class="fa-solid fa-route"></i> Interactive Navigation</span>
+          <h2 class="section-title">Smart Campus Map &amp; Routing</h2>
+          <p class="section-subtitle">Real walking routes between university buildings using OpenStreetMap and Leaflet.js. Choose your destination, toggle well-lit paths, or locate yourself via GPS.</p>
+        </div>
+
+        <div class="navigation-layout">
+          <!-- Left Control Sidebar -->
+          <div class="route-control-sidebar">
+            <div class="control-panel-card">
+              <h3 class="panel-title"><i class="fa-solid fa-diamond-turn-right" style="color:var(--teal-600)"></i> Find Campus Route</h3>
+              
+              <div class="route-inputs-wrapper">
+                <!-- Starting Point -->
+                <div class="input-group">
+                  <label class="input-label" for="nav-start-select"><i class="fa-solid fa-location-dot" style="color:#10B981"></i> Starting Point</label>
+                  <select id="nav-start-select" class="custom-select"></select>
+                </div>
+
+                <!-- Swap Button -->
+                <div class="swap-button-row">
+                  <button type="button" class="btn-swap" id="btn-swap-locations" title="Swap Starting Point &amp; Destination">
+                    <i class="fa-solid fa-arrow-up-down"></i>
+                  </button>
+                </div>
+
+                <!-- Destination -->
+                <div class="input-group">
+                  <label class="input-label" for="nav-end-select"><i class="fa-solid fa-flag-checkered" style="color:#EF4444"></i> Destination</label>
+                  <select id="nav-end-select" class="custom-select"></select>
+                </div>
+
+                <!-- Safe Path Priority Option -->
+                <label class="preference-toggle-row">
+                  <input type="checkbox" id="nav-prefer-safe" checked>
+                  <span class="preference-text"><i class="fa-solid fa-lightbulb" style="color:#0D9488"></i> Prioritize Well-Lit Night Corridors</span>
+                </label>
+
+                <!-- Action Buttons -->
+                <div class="route-btn-grid">
+                  <button type="button" class="btn btn-primary" id="btn-calculate-route">
+                    <i class="fa-solid fa-person-walking"></i> Calculate Walking Route
+                  </button>
+                  <div class="locate-btn-row">
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-locate-me" style="flex:1;">
+                      <i class="fa-solid fa-crosshairs"></i> Locate Me
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-clear-route" style="flex:1;">
+                      <i class="fa-solid fa-trash-can"></i> Clear
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Layer Toggles -->
+            <div class="layers-card">
+              <div class="layers-title"><i class="fa-solid fa-layer-group"></i> Campus Map Layers</div>
+              <label class="layer-toggle-item">
+                <span><i class="fa-solid fa-lightbulb" style="color:#14B8A6"></i> Well-Lit Night Corridors</span>
+                <input type="checkbox" id="toggle-layer-welllit" checked>
+              </label>
+              <label class="layer-toggle-item">
+                <span><i class="fa-solid fa-shield-halved" style="color:#0D9488"></i> Security Posts &amp; Kiosks</span>
+                <input type="checkbox" id="toggle-layer-security" checked>
+              </label>
+              <label class="layer-toggle-item">
+                <span><i class="fa-solid fa-triangle-exclamation" style="color:#D97706"></i> Community Hazard Reports</span>
+                <input type="checkbox" id="toggle-layer-hazards" checked>
+              </label>
+            </div>
+          </div>
+
+          <!-- Right Map Frame -->
+          <div class="map-view-wrapper">
+            <div class="map-toolbar">
+              <div class="map-search-bar">
+                <i class="fa-solid fa-magnifying-glass" style="color:var(--slate-400)"></i>
+                <input type="text" id="building-search-input" placeholder="Search 10 campus buildings, labs, gates...">
+              </div>
+              <div class="map-legend-items">
+                <span><span class="legend-dot dot-bldg"></span> Building</span>
+                <span><span class="legend-dot dot-sec"></span> Security</span>
+                <span><span class="legend-dot dot-path"></span> Well-Lit Path</span>
+              </div>
+            </div>
+
+            <!-- Leaflet Container -->
+            <div id="campus-map"></div>
+          </div>
+        </div>
+
+        <!-- Turn-by-Turn Route Results Panel (Populated dynamically) -->
+        <div id="route-results-panel" class="route-results-drawer hidden"></div>
+
+        <!-- Searchable Campus Building Directory Cards -->
+        <div class="building-directory-section">
+          <div class="section-header" style="text-align:left; margin-bottom:1.5rem;">
+            <h3 style="font-size:1.6rem; color:var(--navy-900);">Campus Facilities &amp; Buildings Directory</h3>
+            <p style="color:var(--slate-500); font-size:0.95rem;">Select any building to view operational hours, accessibility features, or lock as route destination.</p>
+          </div>
+
+          <!-- Category Pills -->
+          <div class="category-filter-pills">
+            <button class="category-pill active" data-category="all" onclick="window.campusNavigationUI.setCategoryFilter('all')">All Buildings (10)</button>
+            <button class="category-pill" data-category="Academic" onclick="window.campusNavigationUI.setCategoryFilter('Academic')">Academic</button>
+            <button class="category-pill" data-category="Facilities" onclick="window.campusNavigationUI.setCategoryFilter('Facilities')">Facilities &amp; Labs</button>
+            <button class="category-pill" data-category="Administration" onclick="window.campusNavigationUI.setCategoryFilter('Administration')">Administration</button>
+            <button class="category-pill" data-category="Amenities" onclick="window.campusNavigationUI.setCategoryFilter('Amenities')">Amenities &amp; Food</button>
+            <button class="category-pill" data-category="Access" onclick="window.campusNavigationUI.setCategoryFilter('Access')">Gates &amp; Parking</button>
+          </div>
+
+          <div id="buildings-grid-container" class="buildings-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         3. CAMPUS SAFETY SECTION
+         ================================================ -->
+    <section id="section-safety" class="app-section hidden section-spacing">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag"><i class="fa-solid fa-shield-heart"></i> Safety Infrastructure</span>
+          <h2 class="section-title">Verified Campus Safety &amp; Support</h2>
+          <p class="section-subtitle">Discover verified 24x7 security posts, inspect designated well-lit corridors, and report physical campus hazards to administration.</p>
+        </div>
+
+        <!-- Top Grid: Security Posts & Emergency Numbers -->
+        <div class="safety-grid-top">
+          <!-- Left: Verified Security Kiosks -->
+          <div>
+            <h3 style="font-size:1.4rem; margin-bottom:1rem; color:var(--navy-900);">
+              <i class="fa-solid fa-shield-halved" style="color:var(--teal-600)"></i> Manned Security Kiosks &amp; Help Points
+            </h3>
+            <p style="font-size:0.9rem; color:var(--slate-500); margin-bottom:1.25rem;">
+              All posts are actively manned by licensed campus security personnel equipped with first-aid, emergency radios, and immediate dispatch links.
+            </p>
+            <div id="security-kiosks-grid" class="kiosks-grid"></div>
+          </div>
+
+          <!-- Right: Safety Information & Night Escort Service -->
+          <div>
+            <h3 style="font-size:1.4rem; margin-bottom:1rem; color:var(--navy-900);">
+              <i class="fa-solid fa-moon" style="color:#6366F1"></i> Night Safety Guidelines &amp; Escort
+            </h3>
+            <div style="background:var(--white); border:1px solid var(--slate-200); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1.5rem; box-shadow:var(--shadow-sm);">
+              <h4 style="font-size:1.1rem; color:var(--navy-900); margin-bottom:0.5rem;"><i class="fa-solid fa-person-walking-arrow-right" style="color:var(--teal-600)"></i> Campus Night Escort Service</h4>
+              <p style="font-size:0.88rem; color:var(--slate-600); line-height:1.55; margin-bottom:1rem;">
+                Studying late at the Central Library or CS Labs? Contact the Security Control Room or approach any security officer to request a security escort to your hostel or vehicle.
+              </p>
+              <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <span class="badge badge-info"><i class="fa-regular fa-clock"></i> 09:00 PM - 03:00 AM</span>
+                <span class="badge badge-success"><i class="fa-solid fa-shield-cat"></i> Female Officer Accompaniment Available</span>
+              </div>
+            </div>
+
+            <div style="background:var(--white); border:1px solid var(--slate-200); border-radius:var(--radius-lg); padding:1.5rem; box-shadow:var(--shadow-sm);">
+              <h4 style="font-size:1.1rem; color:var(--navy-900); margin-bottom:0.5rem;"><i class="fa-solid fa-lightbulb" style="color:#EAB308"></i> Well-Lit Night Corridors</h4>
+              <p style="font-size:0.88rem; color:var(--slate-600); line-height:1.55; margin-bottom:0.75rem;">
+                Designated routes are equipped with high-mast LED floodlights spaced 15 meters apart with 360° pan-tilt-zoom CCTV coverage. Look for the glowing teal lines on our interactive map.
+              </p>
+              <button class="btn btn-outline btn-sm" onclick="window.campusApp.navigateToTab('navigation')">
+                <i class="fa-solid fa-map"></i> View Safe Corridors on Map
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 24x7 Emergency Contact Directory Cards -->
+        <div style="margin-bottom:3.5rem;">
+          <div class="section-header" style="text-align:left; margin-bottom:1.25rem;">
+            <h3 style="font-size:1.5rem; color:var(--navy-900);">Emergency Telephone Directory</h3>
+            <p style="color:var(--slate-500); font-size:0.92rem;">Direct one-touch phone connections to campus dispatchers and jurisdiction emergency units.</p>
+          </div>
+          <div id="emergency-contacts-grid" class="emergency-contacts-grid"></div>
+        </div>
+
+        <!-- Form: Report Unsafe Locations or Infrastructure Issues -->
+        <div class="hazard-reporting-section">
+          <div class="section-header" style="text-align:left; margin-bottom:1.5rem;">
+            <span class="section-tag" style="background:#FEF2F2; color:#B91C1C; border-color:#FCA5A5;">
+              <i class="fa-solid fa-triangle-exclamation"></i> Infrastructure Hazard
+            </span>
+            <h3 style="font-size:1.6rem; color:var(--navy-900);">Report Unsafe Area or Infrastructure Issue</h3>
+            <p style="color:var(--slate-500); font-size:0.95rem;">
+              Encountered a non-functional streetlight, broken pavement, dark blindspot, or damaged emergency call box? File a report so university maintenance and security can inspect it.
+            </p>
+          </div>
+
+          <form id="report-hazard-form">
+            <div class="form-grid-2">
+              <div class="input-group">
+                <label class="input-label" for="hazard-category"><i class="fa-solid fa-list-check"></i> Issue Category *</label>
+                <select id="hazard-category" class="custom-select" required>
+                  <option value="">Select Category...</option>
+                  <option value="Broken Streetlight">Broken / Flickering Streetlight</option>
+                  <option value="Dark / Unlit Blindspot">Dark / Unlit Blindspot</option>
+                  <option value="Damaged Pathway">Damaged Pathway / Tripping Hazard</option>
+                  <option value="Vegetation Overgrowth">Vegetation Overgrowth Obstructing Path</option>
+                  <option value="Blocked Fire Exit">Blocked Fire Exit / Corridor</option>
+                  <option value="CCTV Blindspot / Defect">CCTV Camera Offline / Blindspot</option>
+                  <option value="Suspicious Activity">Suspicious Activity / Loitering</option>
+                  <option value="Other Hazard">Other Physical Safety Hazard</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="safety-location-select"><i class="fa-solid fa-location-dot"></i> Campus Location *</label>
+                <select id="safety-location-select" class="custom-select" required></select>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="input-group">
+                <label class="input-label" for="hazard-severity"><i class="fa-solid fa-gauge"></i> Hazard Severity Level *</label>
+                <select id="hazard-severity" class="custom-select" required>
+                  <option value="Low">Low - Cosmetic or non-urgent infrastructure defect</option>
+                  <option value="Medium" selected>Medium - Reduced visibility or uneven walkway</option>
+                  <option value="High">High - Significant dark zone or safety impediment</option>
+                  <option value="Critical">Critical - Immediate physical danger / exposed electrical wiring</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="hazard-reporter-type"><i class="fa-solid fa-user-tag"></i> Reporter Identity</label>
+                <select id="hazard-reporter-type" class="custom-select">
+                  <option value="anonymous">Anonymous Student Report</option>
+                  <option value="registered">Registered Campus Student</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group-full input-group">
+              <label class="input-label" for="hazard-description"><i class="fa-solid fa-align-left"></i> Detailed Description *</label>
+              <textarea id="hazard-description" class="custom-textarea" rows="3" placeholder="Provide exact details (e.g. Lamp post #14 is flickering opposite the Chemistry lab door, completely dark after 7 PM)..." required></textarea>
+            </div>
+
+            <div class="form-group-full input-group">
+              <label class="input-label"><i class="fa-solid fa-camera"></i> Evidence / Hazard Photo Upload (Optional)</label>
+              <div class="file-upload-dropzone">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:2rem; color:var(--teal-600); margin-bottom:0.5rem;"></i>
+                <p style="font-weight:600; font-size:0.95rem; color:var(--navy-900);">Click or drag hazard photo here</p>
+                <span style="font-size:0.8rem; color:var(--slate-500);">Supports JPG, PNG (Max 5MB)</span>
+                <input type="file" id="hazard-photo-input" accept="image/*">
+                <div id="hazard-photo-preview"></div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+              <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-hazard">
+                <i class="fa-solid fa-paper-plane"></i> Submit Safety Report
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Community Safety Reports Feed (Verified vs Unverified) -->
+        <div class="community-reports-section">
+          <div class="filter-bar-header">
+            <div>
+              <h3 style="font-size:1.5rem; color:var(--navy-900);">Active Campus Safety Bulletin</h3>
+              <p style="color:var(--slate-500); font-size:0.9rem;">
+                Clear distinction between official <strong style="color:#DC2626;">Verified Hazards</strong> inspected by university staff and <strong style="color:#D97706;">Unverified Community Reports</strong> pending verification.
+              </p>
+            </div>
+            <div style="display:flex; gap:0.4rem;">
+              <button class="btn btn-outline btn-sm reports-filter-btn active" data-filter="all">All Reports</button>
+              <button class="btn btn-outline btn-sm reports-filter-btn" data-filter="verified">Verified Only</button>
+              <button class="btn btn-outline btn-sm reports-filter-btn" data-filter="unverified">Pending Inspection</button>
+            </div>
+          </div>
+
+          <div id="community-reports-list" class="reports-feed-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         4. ANTI-RAGGING SUPPORT SECTION
+         ================================================ -->
+    <section id="section-antiragging" class="app-section hidden section-spacing">
+      <div class="container">
+        <!-- UGC Statutory Hero Banner -->
+        <div class="antiragging-hero-banner">
+          <div>
+            <div class="ugc-seal-badge">
+              <i class="fa-solid fa-gavel"></i> Statutory UGC Compliance &bull; Zero Tolerance Policy
+            </div>
+            <h2>Zero Tolerance Anti-Ragging Drive</h2>
+            <p>
+              Ragging in any form is a cognizable criminal offense under Supreme Court guidelines and statutory regulations. You are protected, supported, and heard. Reports are investigated with strict proctorial confidentiality.
+            </p>
+            <div style="margin-top:1.5rem; display:flex; gap:0.75rem; flex-wrap:wrap;">
+              <a href="tel:18001805522" class="btn btn-danger btn-lg">
+                <i class="fa-solid fa-phone"></i> National Helpline: 1800-180-5522
+              </a>
+              <button class="btn btn-outline btn-lg" style="color:#FFF; border-color:rgba(255,255,255,0.3);" onclick="document.getElementById('anti-ragging-form').scrollIntoView({behavior:'smooth'})">
+                <i class="fa-solid fa-file-shield"></i> File Confidential Report
+              </button>
+            </div>
+          </div>
+
+          <div class="helpline-box-card">
+            <span style="font-size:0.85rem; font-weight:700; text-transform:uppercase; color:#94A3B8;">National 24x7 Statutory Helpline</span>
+            <span class="helpline-phone-huge">1800-180-5522</span>
+            <span style="font-size:0.82rem; color:#CBD5E1; display:block; margin-bottom:1rem;">Toll-Free &bull; Operates 24 Hours in 12 Indian Languages</span>
+            <a href="mailto:helpline@antiragging.in" class="btn btn-outline btn-xs" style="color:#FFF; border-color:rgba(255,255,255,0.3);">
+              <i class="fa-regular fa-envelope"></i> helpline@antiragging.in
+            </a>
+          </div>
+        </div>
+
+        <div class="antiragging-layout">
+          <!-- Left: Confidential Reporting Form -->
+          <div class="antiragging-form-card">
+            <div class="section-header" style="text-align:left; margin-bottom:1.5rem;">
+              <span class="section-tag" style="background:#FDF4FF; color:#A21CAF; border-color:#F0ABFC;">
+                <i class="fa-solid fa-user-shield"></i> Secure Whistleblower Channel
+              </span>
+              <h3 style="font-size:1.6rem; color:var(--navy-900);">Submit Anti-Ragging Incident Report</h3>
+              <p style="color:var(--slate-500); font-size:0.92rem;">
+                You may submit this report anonymously or provide your details. Generated reference codes allow you to track investigation status privately.
+              </p>
+            </div>
+
+            <form id="anti-ragging-form">
+              <!-- Anonymous Toggle -->
+              <div class="anon-switch-box">
+                <div>
+                  <strong style="color:var(--navy-900); font-size:0.95rem; display:block;"><i class="fa-solid fa-mask"></i> Submit as Anonymous Report</strong>
+                  <span style="font-size:0.82rem; color:var(--slate-500);">Your personal identity will not be attached to the complaint docket.</span>
+                </div>
+                <label style="display:flex; align-items:center; cursor:pointer;">
+                  <input type="checkbox" id="ar-anonymous-toggle" checked style="width:20px; height:20px; accent-color:var(--teal-600);">
+                </label>
+              </div>
+
+              <!-- Student Identifiable Details (Hidden if anonymous) -->
+              <div id="ar-student-info-fields" class="hidden">
+                <div class="form-grid-2">
+                  <div class="input-group">
+                    <label class="input-label" for="ar-name"><i class="fa-solid fa-user"></i> Full Name *</label>
+                    <input type="text" id="ar-name" class="custom-input" placeholder="e.g. Rahul Sharma">
+                  </div>
+                  <div class="input-group">
+                    <label class="input-label" for="ar-roll"><i class="fa-solid fa-id-card"></i> Student Roll / Reg No *</label>
+                    <input type="text" id="ar-roll" class="custom-input" placeholder="e.g. 2026CSB1042">
+                  </div>
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="input-group">
+                    <label class="input-label" for="ar-contact"><i class="fa-solid fa-phone"></i> Contact Phone / Email *</label>
+                    <input type="text" id="ar-contact" class="custom-input" placeholder="e.g. +91 98765 00000">
+                  </div>
+                  <div class="input-group">
+                    <label class="input-label" for="ar-dept"><i class="fa-solid fa-building"></i> Academic Department</label>
+                    <input type="text" id="ar-dept" class="custom-input" placeholder="e.g. Dept of Computer Science">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Incident Details -->
+              <div class="form-grid-2">
+                <div class="input-group">
+                  <label class="input-label" for="ar-category"><i class="fa-solid fa-tags"></i> Incident Category *</label>
+                  <select id="ar-category" class="custom-select" required>
+                    <option value="">Select Category...</option>
+                    <option value="Verbal Harassment / Intimidation">Verbal Harassment / Intimidation</option>
+                    <option value="Physical Assault / Hazing">Physical Assault / Mock Drills</option>
+                    <option value="Forced Labor / Errand Coercion">Forced Labor / Menial Tasks</option>
+                    <option value="Financial Extortion">Financial Extortion / Demand for Money</option>
+                    <option value="Hostel Harassment">Hostel / Dormitory Harassment</option>
+                    <option value="Cyber Ragging / Online Bullying">Cyber Ragging / Digital Stalking</option>
+                    <option value="Academic Sabotage">Academic Sabotage / Deprivation</option>
+                    <option value="Other Misconduct">Other Severe Misconduct</option>
+                  </select>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label" for="ar-date"><i class="fa-regular fa-calendar"></i> Date &amp; Approximate Time *</label>
+                  <input type="datetime-local" id="ar-date" class="custom-input" required>
+                </div>
+              </div>
+
+              <div class="form-group-full input-group">
+                <label class="input-label" for="ar-location-select"><i class="fa-solid fa-location-dot"></i> Campus Incident Location *</label>
+                <select id="ar-location-select" class="custom-select" required></select>
+              </div>
+
+              <div class="form-group-full input-group">
+                <label class="input-label" for="ar-description"><i class="fa-solid fa-pencil"></i> Detailed Description of Incident *</label>
+                <textarea id="ar-description" class="custom-textarea" rows="4" placeholder="Detail exactly what took place, words spoken, threats made, and any context..." required></textarea>
+              </div>
+
+              <div class="form-group-full input-group">
+                <label class="input-label" for="ar-suspects"><i class="fa-solid fa-user-ninja"></i> Accused / Persons Involved (Names, Branch, Physical Description)</label>
+                <input type="text" id="ar-suspects" class="custom-input" placeholder="e.g. 3 senior students in 3rd year mechanical branch, tall student wearing blue hoodie...">
+              </div>
+
+              <div class="form-group-full input-group">
+                <label class="input-label"><i class="fa-solid fa-paperclip"></i> Evidence Upload (Screenshots, Audio, Images - Optional)</label>
+                <div class="file-upload-dropzone">
+                  <i class="fa-solid fa-file-shield" style="font-size:1.8rem; color:var(--teal-600); margin-bottom:0.4rem;"></i>
+                  <p style="font-weight:600; font-size:0.92rem; color:var(--navy-900);">Upload proof or corroborating documents</p>
+                  <span style="font-size:0.78rem; color:var(--slate-500);">Files are stored confidentially and restricted to the Proctorial Committee.</span>
+                  <input type="file" id="ar-evidence-input" accept="image/*,.pdf,.doc,.docx,.mp3,.m4a">
+                  <div id="ar-evidence-preview"></div>
+                </div>
+              </div>
+
+              <!-- Clear Statutory Privacy Notice -->
+              <div class="privacy-notice-box">
+                <strong style="color:var(--navy-900); display:block; margin-bottom:0.25rem;">
+                  <i class="fa-solid fa-shield-halved"></i> Statutory Privacy Notice &amp; Assurance:
+                </strong>
+                Under the Supreme Court Mandate and UGC Regulations 2009, this portal guarantees that no student filing a complaint shall be subjected to retaliation or academic victimization. Identifying details (if provided) are restricted strictly to authorized Anti-Ragging Committee members. Anonymous complaints are investigated with equal priority.
+              </div>
+
+              <div style="display:flex; justify-content:flex-end;">
+                <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-complaint">
+                  <i class="fa-solid fa-shield-halved"></i> File Confidential Complaint
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Right: Authorized Committee Contacts & Tracker -->
+          <div>
+            <div class="squad-contacts-card">
+              <h3 style="font-size:1.3rem; margin-bottom:0.5rem; color:var(--navy-900);">
+                <i class="fa-solid fa-user-shield" style="color:var(--teal-600)"></i> Campus Anti-Ragging Committee
+              </h3>
+              <p style="font-size:0.85rem; color:var(--slate-500); margin-bottom:1.25rem;">
+                Authorized institutional officers for emergency intervention:
+              </p>
+
+              <div class="squad-member-item">
+                <div class="squad-avatar"><i class="fa-solid fa-user-tie"></i></div>
+                <div class="squad-details">
+                  <h5>Dr. K. Sharma</h5>
+                  <p>Chief Proctor &amp; Anti-Ragging Chair</p>
+                  <a href="tel:+911126591234" style="font-size:0.8rem; color:var(--teal-700); font-weight:700;"><i class="fa-solid fa-phone"></i> +91 11 2659 1234</a>
+                </div>
+              </div>
+
+              <div class="squad-member-item">
+                <div class="squad-avatar"><i class="fa-solid fa-user-nurse"></i></div>
+                <div class="squad-details">
+                  <h5>Prof. Ananya Sen</h5>
+                  <p>Dean of Student Welfare &amp; Women Cell</p>
+                  <a href="tel:+919876543210" style="font-size:0.8rem; color:var(--teal-700); font-weight:700;"><i class="fa-solid fa-phone"></i> +91 98765 43210</a>
+                </div>
+              </div>
+
+              <div class="squad-member-item">
+                <div class="squad-avatar"><i class="fa-solid fa-building-shield"></i></div>
+                <div class="squad-details">
+                  <h5>Capt. Rajesh Verma</h5>
+                  <p>Chief Security Officer &amp; Flying Squad</p>
+                  <a href="tel:+911126591000" style="font-size:0.8rem; color:var(--teal-700); font-weight:700;"><i class="fa-solid fa-phone"></i> +91 11 2659 1000</a>
+                </div>
+              </div>
+
+              <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--slate-100);">
+                <a href="tel:18001805522" class="btn btn-navy" style="width:100%; justify-content:center;">
+                  <i class="fa-solid fa-phone-volume"></i> Call Anti-Ragging Flying Squad
+                </a>
+              </div>
+            </div>
+
+            <!-- Complaint Tracking Box -->
+            <div class="track-complaint-card">
+              <h4 style="font-size:1.15rem; color:var(--navy-900); margin-bottom:0.35rem;">
+                <i class="fa-solid fa-magnifying-glass-location" style="color:var(--teal-600)"></i> Track Complaint Status
+              </h4>
+              <p style="font-size:0.82rem; color:var(--slate-500);">
+                Enter your unique reference tracking code (e.g. <code>AR-2026-001</code>) to check inquiry updates:
+              </p>
+
+              <div class="track-input-row">
+                <input type="text" id="track-code-input" class="custom-input" placeholder="AR-2026-XXXX">
+                <button type="button" class="btn btn-primary" id="btn-track-complaint">
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+
+              <div id="track-result-box" class="track-result-box hidden"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         5. STUDENT DASHBOARD SECTION
+         ================================================ -->
+    <section id="section-dashboard" class="app-section hidden section-spacing">
+      <div class="container">
+        <!-- Personalized Welcome Banner -->
+        <div class="dashboard-welcome-banner">
+          <div>
+            <h2 id="dash-user-greeting">Welcome back, Campus Scholar!</h2>
+            <p style="color:var(--teal-100); font-size:1rem;">Your personalized student safety dashboard &amp; campus quick-access center.</p>
+          </div>
+          <div style="text-align:right;">
+            <span id="dash-role-badge" class="badge badge-info" style="font-size:0.85rem; padding:0.4rem 0.85rem;">STUDENT</span>
+            <span id="dash-current-date" style="display:block; font-size:0.85rem; color:var(--slate-200); margin-top:0.35rem;"></span>
+          </div>
+        </div>
+
+        <!-- 4 Quick-Action Shortcut Tiles -->
+        <div class="dash-shortcuts-row">
+          <div class="dash-shortcut-btn" id="dash-btn-nav">
+            <div class="shortcut-icon" style="background:#EFF6FF; color:#2563EB;">
+              <i class="fa-solid fa-diamond-turn-right"></i>
+            </div>
+            <strong style="color:var(--navy-900); font-size:1rem;">Find Route</strong>
+            <span style="font-size:0.8rem; color:var(--slate-500);">Navigate between campus facilities</span>
+          </div>
+
+          <div class="dash-shortcut-btn" id="dash-btn-hazard">
+            <div class="shortcut-icon" style="background:#FFFBEB; color:#D97706;">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <strong style="color:var(--navy-900); font-size:1rem;">Report Hazard</strong>
+            <span style="font-size:0.8rem; color:var(--slate-500);">Log dark corners or broken lights</span>
+          </div>
+
+          <div class="dash-shortcut-btn" id="dash-btn-antiragging">
+            <div class="shortcut-icon" style="background:#FDF4FF; color:#A21CAF;">
+              <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+            <strong style="color:var(--navy-900); font-size:1rem;">Anti-Ragging</strong>
+            <span style="font-size:0.8rem; color:var(--slate-500);">Confidential incident reporting</span>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Left: Announcements & Bulletins -->
+          <div>
+            <div class="section-header" style="text-align:left; margin-bottom:1.25rem;">
+              <h3 style="font-size:1.45rem; color:var(--navy-900);">
+                <i class="fa-solid fa-bullhorn" style="color:var(--teal-600)"></i> Official Campus Safety Bulletins
+              </h3>
+              <p style="color:var(--slate-500); font-size:0.88rem;">Real-time notices issued by University Administration and Campus Security.</p>
+            </div>
+            <div id="dash-announcements-list" class="announcements-feed"></div>
+
+            <!-- Frequent / Saved Campus Locations -->
+            <div style="margin-top:2.5rem;">
+              <div class="section-header" style="text-align:left; margin-bottom:1.25rem;">
+                <h3 style="font-size:1.45rem; color:var(--navy-900);">
+                  <i class="fa-solid fa-star" style="color:#EAB308"></i> High-Frequency Campus Spots
+                </h3>
+                <p style="color:var(--slate-500); font-size:0.88rem;">One-tap direct routing to the most visited campus buildings.</p>
+              </div>
+              <div id="dash-quick-locations-grid" class="quick-locations-grid"></div>
+            </div>
+          </div>
+
+          <!-- Right: My Safety Activity & Guidelines -->
+          <div>
+            <div style="background:var(--white); border:1px solid var(--slate-200); border-radius:var(--radius-xl); padding:1.75rem; box-shadow:var(--shadow-sm); margin-bottom:2rem;">
+              <h4 style="font-size:1.2rem; color:var(--navy-900); margin-bottom:0.5rem;">
+                <i class="fa-solid fa-clock-rotate-left" style="color:var(--navy-700)"></i> My Recent Activity
+              </h4>
+              <p style="font-size:0.82rem; color:var(--slate-500); margin-bottom:1.25rem;">
+                Safety reports, hazard submissions, and emergency alerts recorded from this device.
+              </p>
+              <div id="dash-my-activity"></div>
+            </div>
+
+            <!-- Night Safety Protocol Checklist -->
+            <div style="background:var(--white); border:1px solid var(--slate-200); border-radius:var(--radius-xl); padding:1.75rem; box-shadow:var(--shadow-sm);">
+              <h4 style="font-size:1.2rem; color:var(--navy-900); margin-bottom:0.85rem;">
+                <i class="fa-solid fa-list-check" style="color:var(--teal-600)"></i> Student Safety Protocol
+              </h4>
+              <ul style="list-style:none; display:flex; flex-direction:column; gap:0.75rem; font-size:0.88rem; color:var(--slate-700);">
+                <li style="display:flex; gap:0.5rem; align-items:flex-start;">
+                  <i class="fa-solid fa-circle-check" style="color:var(--teal-600); margin-top:3px;"></i>
+                  <span>Always stick to the <strong>Well-Lit Academic Spine</strong> when walking after 8:00 PM.</span>
+                </li>
+                <li style="display:flex; gap:0.5rem; align-items:flex-start;">
+                  <i class="fa-solid fa-circle-check" style="color:var(--teal-600); margin-top:3px;"></i>
+                  <span>Save the Campus Security Hotline <strong>+91 11 2659 1000</strong> on phone speed-dial.</span>
+                </li>
+                <li style="display:flex; gap:0.5rem; align-items:flex-start;">
+                  <i class="fa-solid fa-circle-check" style="color:var(--teal-600); margin-top:3px;"></i>
+                  <span>Immediately trigger Emergency SOS if you feel followed or threatened.</span>
+                </li>
+                <li style="display:flex; gap:0.5rem; align-items:flex-start;">
+                  <i class="fa-solid fa-circle-check" style="color:var(--teal-600); margin-top:3px;"></i>
+                  <span>Report unlit corners or broken streetlights to keep fellow students safe.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         6. PROTECTED ADMIN DASHBOARD SECTION
+         ================================================ -->
+    <section id="section-admin" class="app-section hidden section-spacing">
+      <div class="container">
+        <!-- Admin Login Card (Shown when not authenticated as admin) -->
+        <div id="admin-login-card" class="admin-card-auth">
+          <div class="brand-icon-shield" style="margin:0 auto 1.25rem;">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <h3 style="font-size:1.75rem; margin-bottom:0.5rem; color:var(--navy-900);">Campus Administration Portal</h3>
+          <p style="font-size:0.9rem; color:var(--slate-500); margin-bottom:1.75rem;">
+            Restricted role-based access for University Proctors, Chief Security Officers, and Campus Facility Managers.
+          </p>
+
+          <form id="admin-login-form">
+            <div class="input-group" style="text-align:left; margin-bottom:1rem;">
+              <label class="input-label" for="admin-email-input"><i class="fa-regular fa-envelope"></i> Administrator Email</label>
+              <input type="email" id="admin-email-input" class="custom-input" value="admin@campussaathi.edu" required>
+            </div>
+            <div class="input-group" style="text-align:left; margin-bottom:1.5rem;">
+              <label class="input-label" for="admin-pass-input"><i class="fa-solid fa-key"></i> Security Password</label>
+              <input type="password" id="admin-pass-input" class="custom-input" value="admin123" required>
+            </div>
+
+            <button type="submit" class="btn btn-navy" style="width:100%; margin-bottom:1rem;">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Administrator Console
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-quick-admin-login" style="width:100%;">
+              <i class="fa-solid fa-bolt"></i> Quick Login as Demo Admin (One-Click)
+            </button>
+          </form>
+
+          <div style="margin-top:1.5rem; font-size:0.8rem; color:var(--slate-500); border-top:1px solid var(--slate-100); padding-top:1rem;">
+            Default Credentials: <code>admin@campussaathi.edu</code> / <code>admin123</code>
+          </div>
+        </div>
+
+        <!-- Admin Portal Content (Shown after login) -->
+        <div id="admin-portal-content" class="hidden">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; flex-wrap:wrap; gap:1rem;">
+            <div>
+              <span class="badge badge-info"><i class="fa-solid fa-shield-halved"></i> University Proctorial Council</span>
+              <h2 style="font-size:2.2rem; color:var(--navy-900); margin-top:0.35rem;">Campus Administration Console</h2>
+            </div>
+            <div style="display:flex; gap:0.75rem;">
+              <button class="btn btn-outline btn-sm" id="btn-admin-export-data">
+                <i class="fa-solid fa-file-export"></i> Export All Data
+              </button>
+              <button class="btn btn-outline btn-sm text-danger" id="btn-admin-reset-demo">
+                <i class="fa-solid fa-rotate-left"></i> Reset Demo Defaults
+              </button>
+              <button class="btn btn-danger btn-sm" id="btn-admin-logout">
+                <i class="fa-solid fa-power-off"></i> Logout
+              </button>
+            </div>
+          </div>
+
+          <!-- Summary Metric Cards -->
+          <div class="admin-stats-summary-grid">
+            <div class="admin-stat-card">
+              <div class="stat-icon dist-icon"><i class="fa-solid fa-building"></i></div>
+              <div>
+                <span class="stat-num" id="stat-total-buildings">10</span>
+                <span class="stat-lbl">Mapped Buildings</span>
+              </div>
+            </div>
+
+            <div class="admin-stat-card">
+              <div class="stat-icon time-icon"><i class="fa-solid fa-shield-halved"></i></div>
+              <div>
+                <span class="stat-num" id="stat-total-security">5</span>
+                <span class="stat-lbl">Security Posts</span>
+              </div>
+            </div>
+
+            <div class="admin-stat-card">
+              <div class="stat-icon safety-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <div>
+                <span class="stat-num" id="stat-total-hazards">2</span>
+                <span class="stat-lbl">Open Hazards</span>
+              </div>
+            </div>
+
+            <div class="admin-stat-card">
+              <div class="stat-icon" style="background:#FDF4FF; color:#A21CAF;"><i class="fa-solid fa-scale-balanced"></i></div>
+              <div>
+                <span class="stat-num" id="stat-total-antiragging">1</span>
+                <span class="stat-lbl">Anti-Ragging Cases</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Admin Navigation Tabs -->
+          <div class="admin-nav-tabs">
+            <div class="admin-nav-item active" data-admin-tab="buildings">
+              <i class="fa-solid fa-building"></i> Buildings (10)
+            </div>
+            <div class="admin-nav-item" data-admin-tab="security-paths">
+              <i class="fa-solid fa-shield-halved"></i> Security &amp; Safe Paths
+            </div>
+            <div class="admin-nav-item" data-admin-tab="contacts">
+              <i class="fa-solid fa-phone-volume"></i> Emergency Directory
+            </div>
+            <div class="admin-nav-item" data-admin-tab="safety">
+              <i class="fa-solid fa-triangle-exclamation"></i> Safety Hazard Reports
+            </div>
+            <div class="admin-nav-item" data-admin-tab="antiragging">
+              <i class="fa-solid fa-scale-balanced"></i> Anti-Ragging Complaints
+            </div>
+            <div class="admin-nav-item" data-admin-tab="settings">
+              <i class="fa-solid fa-sliders"></i> Campus Settings &amp; Firebase
+            </div>
+          </div>
+
+          <!-- Sub-Pane 1: Campus Buildings CRUD -->
+          <div id="admin-pane-buildings" class="admin-tab-pane">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+              <div>
+                <h4 style="font-size:1.3rem;">Campus Buildings &amp; Coordinates</h4>
+                <p style="font-size:0.85rem; color:var(--slate-500);">Add, edit, or adjust coordinates for buildings, lecture halls, and gates.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="window.campusAdminManager.openAddBuildingModal()">
+                <i class="fa-solid fa-plus"></i> Add New Building
+              </button>
+            </div>
+
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Building Name &amp; GPS</th>
+                    <th>Category</th>
+                    <th>Operating Hours</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-buildings-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sub-Pane 2: Security & Well-Lit Paths -->
+          <div id="admin-pane-security-paths" class="admin-tab-pane hidden">
+            <!-- Security Posts -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+              <div>
+                <h4 style="font-size:1.3rem;">Manned Security Kiosks &amp; Help Points</h4>
+                <p style="font-size:0.85rem; color:var(--slate-500);">Configure active guard booths, emergency intercoms, and telephone points on campus.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="window.campusAdminManager.openAddSecurityModal()">
+                <i class="fa-solid fa-plus"></i> Add Security Point
+              </button>
+            </div>
+
+            <div class="admin-table-container" style="margin-bottom:2.5rem;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Post Name &amp; Coordinates</th>
+                    <th>Post Type</th>
+                    <th>Emergency Phone</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-security-tbody"></tbody>
+              </table>
+            </div>
+
+            <!-- Well-Lit Pathways -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+              <div>
+                <h4 style="font-size:1.3rem;">Designated Well-Lit Night Corridors</h4>
+                <p style="font-size:0.85rem; color:var(--slate-500);">Manage illuminated corridors with CCTV surveillance highlighted on the interactive map.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="window.campusAdminManager.openAddPathwayModal()">
+                <i class="fa-solid fa-plus"></i> Add Well-Lit Pathway
+              </button>
+            </div>
+
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Pathway Name</th>
+                    <th>Description &amp; Route</th>
+                    <th>Safety Score</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-pathways-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sub-Pane 3: Emergency Contacts Directory -->
+          <div id="admin-pane-contacts" class="admin-tab-pane hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+              <div>
+                <h4 style="font-size:1.3rem;">Emergency Directory &amp; SOS Dispatch Number</h4>
+                <p style="font-size:0.85rem; color:var(--slate-500);">Update primary campus security hotlines, ambulance, proctorial council, and women's safety helplines.</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="window.campusAdminManager.openAddContactModal()">
+                <i class="fa-solid fa-plus"></i> Add Emergency Contact
+              </button>
+            </div>
+
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Contact Name &amp; Location</th>
+                    <th>Role / Responsibility</th>
+                    <th>Telephone Number</th>
+                    <th>SOS Primary Link</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-contacts-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sub-Pane 4: Safety Hazards Management -->
+          <div id="admin-pane-safety" class="admin-tab-pane hidden">
+            <div style="margin-bottom:1.25rem;">
+              <h4 style="font-size:1.3rem;">Infrastructure Hazard Management</h4>
+              <p style="font-size:0.85rem; color:var(--slate-500);">Review reports filed by students. Toggle verification badge and update maintenance status.</p>
+            </div>
+
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Ref ID</th>
+                    <th>Hazard Category &amp; Location</th>
+                    <th>Severity</th>
+                    <th>Verification Status</th>
+                    <th>Resolution Stage</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-safety-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sub-Pane 5: Anti-Ragging Cases -->
+          <div id="admin-pane-antiragging" class="admin-tab-pane hidden">
+            <div style="margin-bottom:1.25rem;">
+              <h4 style="font-size:1.3rem; color:#991B1B;">
+                <i class="fa-solid fa-lock"></i> Confidential Anti-Ragging Dockets
+              </h4>
+              <p style="font-size:0.85rem; color:var(--slate-500);">
+                Restricted to Proctorial Council. Adjudicate complaints, review whistleblower narratives, and log inquiry action notes.
+              </p>
+            </div>
+
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Tracking ID</th>
+                    <th>Category &amp; Site</th>
+                    <th>Complainant</th>
+                    <th>Inquiry Stage</th>
+                    <th>Review Case</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-antiragging-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Sub-Pane 6: Campus Coordinates & Firebase Settings -->
+          <div id="admin-pane-settings" class="admin-tab-pane hidden">
+            <div class="form-grid-2" style="margin-bottom:2rem;">
+              <!-- Campus Center & Coordinates Settings -->
+              <div style="background:var(--white); border:1px solid var(--slate-200); border-radius:var(--radius-lg); padding:1.75rem; box-shadow:var(--shadow-sm);">
+                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem;">
+                  <i class="fa-solid fa-map-location-dot" style="font-size:1.25rem; color:var(--teal-600)"></i>
+                  <h4 style="font-size:1.2rem; color:var(--navy-900); margin:0;">Campus Coordinates &amp; Branding</h4>
+                </div>
+                <p style="font-size:0.85rem; color:var(--slate-500); margin-bottom:1.25rem;">
+                  Replace the demonstration campus coordinates with your actual college location. Never fakes GPS.
+                </p>
+
+                <form id="campus-settings-form">
+                  <div class="input-group" style="margin-bottom:0.85rem;">
+                    <label class="input-label" for="set-campus-name">University / College Name</label>
+                    <input type="text" id="set-campus-name" class="custom-input" required>
+                  </div>
+
+                  <div class="input-group" style="margin-bottom:0.85rem;">
+                    <label class="input-label" for="set-campus-tagline">Campus Tagline</label>
+                    <input type="text" id="set-campus-tagline" class="custom-input" required>
+                  </div>
+
+                  <div class="form-grid-2" style="margin-bottom:0.85rem;">
+                    <div class="input-group">
+                      <label class="input-label" for="set-campus-lat">Center Latitude</label>
+                      <input type="number" step="0.0001" id="set-campus-lat" class="custom-input" required>
+                    </div>
+                    <div class="input-group">
+                      <label class="input-label" for="set-campus-lng">Center Longitude</label>
+                      <input type="number" step="0.0001" id="set-campus-lng" class="custom-input" required>
+                    </div>
+                  </div>
+
+                  <div class="input-group" style="margin-bottom:1.25rem;">
+                    <label class="input-label" for="set-campus-zoom">Default Map Zoom (14 - 19)</label>
+                    <input type="number" step="0.5" min="14" max="19" id="set-campus-zoom" class="custom-input" required>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary" style="width:100%;">
+                    <i class="fa-solid fa-floppy-disk"></i> Update Campus Coordinates
+                  </button>
+                </form>
+              </div>
+
+              <!-- Firebase Backend Configuration -->
+              <div style="background:var(--white); border:1px solid var(--slate-200); border-radius:var(--radius-lg); padding:1.75rem; box-shadow:var(--shadow-sm);">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+                  <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <i class="fa-solid fa-fire" style="font-size:1.25rem; color:#EA580C"></i>
+                    <h4 style="font-size:1.2rem; color:var(--navy-900); margin:0;">Firebase Backend Integration</h4>
+                  </div>
+                </div>
+
+                <div id="firebase-status-pill" style="margin-bottom:1rem;"></div>
+
+                <p style="font-size:0.85rem; color:var(--slate-500); margin-bottom:1.25rem;">
+                  Campus Saathi operates in zero-dependency Local Storage mode automatically. You can optionally connect live Firebase Auth, Firestore, and Storage:
+                </p>
+
+                <form id="firebase-config-form">
+                  <div class="input-group" style="margin-bottom:0.75rem;">
+                    <label class="input-label" for="fb-cfg-apikey">Firebase API Key</label>
+                    <input type="text" id="fb-cfg-apikey" class="custom-input" placeholder="AIzaSy...">
+                  </div>
+
+                  <div class="form-grid-2" style="margin-bottom:0.75rem;">
+                    <div class="input-group">
+                      <label class="input-label" for="fb-cfg-projectid">Project ID</label>
+                      <input type="text" id="fb-cfg-projectid" class="custom-input" placeholder="campus-saathi">
+                    </div>
+                    <div class="input-group">
+                      <label class="input-label" for="fb-cfg-authdomain">Auth Domain</label>
+                      <input type="text" id="fb-cfg-authdomain" class="custom-input" placeholder="project.firebaseapp.com">
+                    </div>
+                  </div>
+
+                  <div class="form-grid-2" style="margin-bottom:1.25rem;">
+                    <div class="input-group">
+                      <label class="input-label" for="fb-cfg-storagebucket">Storage Bucket</label>
+                      <input type="text" id="fb-cfg-storagebucket" class="custom-input" placeholder="project.appspot.com">
+                    </div>
+                    <div class="input-group">
+                      <label class="input-label" for="fb-cfg-appid">App ID</label>
+                      <input type="text" id="fb-cfg-appid" class="custom-input" placeholder="1:123:web:abc">
+                    </div>
+                  </div>
+
+                  <div style="display:flex; gap:0.5rem;">
+                    <button type="submit" class="btn btn-navy btn-sm" style="flex:1;">
+                      <i class="fa-solid fa-plug"></i> Connect Live Firebase
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-switch-demo-mode">
+                      Reset to Local Demo
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         7. ABOUT SECTION
+         ================================================ -->
+    <section id="section-about" class="app-section hidden section-spacing">
+      <div class="container container-narrow">
+        <div class="section-header">
+          <span class="section-tag"><i class="fa-solid fa-circle-info"></i> About The Project</span>
+          <h2 class="section-title">About Campus Saathi</h2>
+          <p class="section-subtitle">"Find Your Way. Feel Safer. Speak Up."</p>
+        </div>
+
+        <div style="background:var(--white); border:1px solid var(--slate-200); border-radius:var(--radius-xl); padding:2.5rem; box-shadow:var(--shadow-sm); line-height:1.7;">
+          <h3 style="color:var(--navy-900); margin-bottom:1rem; font-size:1.5rem;">Our Mission</h3>
+          <p style="color:var(--slate-700); margin-bottom:1.5rem;">
+            Campus Saathi was born from a fundamental belief: every university student deserves to feel safe, confident, and oriented anywhere on campus, at any hour of the day or night. Far too often, navigation apps treat university campuses as blank spaces, while safety reporting mechanisms remain fragmented, intimidated by bureaucracy, or neglected.
+          </p>
+
+          <h3 style="color:var(--navy-900); margin-bottom:1rem; font-size:1.5rem;">Key Architecture Pillars</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem;">
+            <div style="background:var(--slate-50); border:1px solid var(--slate-200); padding:1.25rem; border-radius:var(--radius-md);">
+              <h4 style="font-size:1.05rem; color:var(--teal-700); margin-bottom:0.5rem;"><i class="fa-solid fa-compass"></i> Building-to-Building Navigation</h4>
+              <p style="font-size:0.85rem; color:var(--slate-600);">Leaflet.js and OpenStreetMap routing with real distance meters and walking times along actual university walkways.</p>
+            </div>
+            <div style="background:var(--slate-50); border:1px solid var(--slate-200); padding:1.25rem; border-radius:var(--radius-md);">
+              <h4 style="font-size:1.05rem; color:#2563EB; margin-bottom:0.5rem;"><i class="fa-solid fa-lightbulb"></i> Well-Lit Night Corridors</h4>
+              <p style="font-size:0.85rem; color:var(--slate-600);">Real-time illuminated path prioritization ensures students walking at night stay within verified CCTV and security coverage.</p>
+            </div>
+            <div style="background:var(--slate-50); border:1px solid var(--slate-200); padding:1.25rem; border-radius:var(--radius-md);">
+              <h4 style="font-size:1.05rem; color:var(--danger); margin-bottom:0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Emergency SOS Synthesis</h4>
+              <p style="font-size:0.85rem; color:var(--slate-600);">2-step verification, one-touch call connection, and browser-based loud audio siren synthesis to deter threats.</p>
+            </div>
+            <div style="background:var(--slate-50); border:1px solid var(--slate-200); padding:1.25rem; border-radius:var(--radius-md);">
+              <h4 style="font-size:1.05rem; color:#A21CAF; margin-bottom:0.5rem;"><i class="fa-solid fa-scale-balanced"></i> Statutory Anti-Ragging</h4>
+              <p style="font-size:0.85rem; color:var(--slate-600);">UGC and Supreme Court compliant whistleblower channel with anonymous submission and docket tracking.</p>
+            </div>
+          </div>
+
+          <h3 style="color:var(--navy-900); margin-bottom:0.75rem; font-size:1.3rem;">Privacy &amp; Data Ethics</h3>
+          <p style="color:var(--slate-700);">
+            Campus Saathi never sells, monetizes, or shares user telemetry. GPS coordinates are only read upon explicit user request and never tracked in the background. Anonymous whistleblowers remain strictly protected.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================
+         8. CONTACT SECTION
+         ================================================ -->
+    <section id="section-contact" class="app-section hidden section-spacing">
+      <div class="container container-narrow">
+        <div class="section-header">
+          <span class="section-tag"><i class="fa-solid fa-envelope"></i> Reach Out</span>
+          <h2 class="section-title">Contact &amp; Student Grievances</h2>
+          <p class="section-subtitle">Have questions, technical feedback, or wish to report a safety concern directly to college authorities?</p>
+        </div>
+
+        <div style="background:var(--white); border:1px solid var(--slate-200); border-radius:var(--radius-xl); padding:2.5rem; box-shadow:var(--shadow-sm);">
+          <form onsubmit="event.preventDefault(); window.campusApp.showToast('Thank you! Your inquiry has been forwarded to campus support.', 'success'); this.reset();">
+            <div class="form-grid-2">
+              <div class="input-group">
+                <label class="input-label" for="contact-name"><i class="fa-solid fa-user"></i> Your Name *</label>
+                <input type="text" id="contact-name" class="custom-input" placeholder="e.g. Priya Sharma" required>
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="contact-email"><i class="fa-solid fa-envelope"></i> Email Address *</label>
+                <input type="email" id="contact-email" class="custom-input" placeholder="e.g. priya@campussaathi.edu" required>
+              </div>
+            </div>
+
+            <div class="form-group-full input-group">
+              <label class="input-label" for="contact-subject"><i class="fa-solid fa-tag"></i> Subject *</label>
+              <select id="contact-subject" class="custom-select" required>
+                <option value="">Select Subject...</option>
+                <option value="General Safety Inquiry">General Safety Inquiry</option>
+                <option value="Campus Navigation Feedback">Campus Navigation / Map Correction</option>
+                <option value="Suggest New Security Kiosk">Suggest New Security / Lighting Point</option>
+                <option value="Anti-Ragging Squad Inquiry">Anti-Ragging Squad Inquiry</option>
+                <option value="Technical Support">Platform Technical Support</option>
+              </select>
+            </div>
+
+            <div class="form-group-full input-group">
+              <label class="input-label" for="contact-msg"><i class="fa-solid fa-message"></i> Message *</label>
+              <textarea id="contact-msg" class="custom-textarea" rows="4" placeholder="How can our safety and campus logistics team assist you?" required></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-paper-plane"></i> Send Inquiries
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ====================================================
+       GLOBAL MODALS
+       ==================================================== -->
+
+  <!-- 1. EMERGENCY SOS MODAL -->
+  <div id="sos-emergency-modal" class="cs-modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="sos-modal-card">
+      <div class="sos-modal-header">
+        <h3 class="sos-modal-title">
+          <i class="fa-solid fa-triangle-exclamation"></i> Emergency SOS Alert
+        </h3>
+        <button class="btn-icon" id="sos-modal-close" aria-label="Close SOS Modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Step 1: Confirmation Prompt -->
+      <div id="sos-step-confirmation">
+        <div class="sos-warning-box">
+          <strong><i class="fa-solid fa-bell"></i> Immediate Assistance Protocol:</strong>
+          <p style="margin-top:0.35rem; font-size:0.9rem;">
+            Are you in immediate physical danger, feeling threatened, or witnessing an urgent campus crisis?
+          </p>
+        </div>
+
+        <p style="font-size:0.85rem; color:var(--slate-600); margin-bottom:1.5rem;">
+          Activating will open direct lines to Campus Security Dispatch, synthesize an audible alarm, and acquire your GPS coordinates.
+        </p>
+
+        <div style="display:flex; gap:0.75rem;">
+          <button type="button" class="btn btn-outline" id="btn-cancel-sos" style="flex:1;">
+            Cancel / False Alarm
+          </button>
+          <button type="button" class="btn btn-danger" id="btn-confirm-sos-activation" style="flex:1.4;">
+            <i class="fa-solid fa-bell"></i> Activate SOS Alert
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Active Dispatch & Assistance -->
+      <div id="sos-step-active" class="hidden">
+        <!-- Transparent Demo Mode Notice -->
+        <div class="demo-mode-notice-banner">
+          <i class="fa-solid fa-circle-info" style="color:#D97706; margin-top:2px;"></i>
+          <div>
+            <strong>Interactive Demonstration Dispatcher:</strong> This prototype simulates campus security dispatch. In real life emergencies outside this test, dial national authorities directly (<strong>112 / 100</strong>).
+          </div>
+        </div>
+
+        <div class="sos-actions-stack">
+          <!-- Primary Security Hotline Call -->
+          <a href="tel:+911126591000" class="btn-sos-call" id="sos-call-primary-btn">
+            <i class="fa-solid fa-phone-volume"></i> CALL CAMPUS SECURITY (+91 11 2659 1000)
+          </a>
+
+          <!-- Medical Hotline -->
+          <a href="tel:+911126591100" class="btn btn-navy" style="font-weight:700;">
+            <i class="fa-solid fa-truck-medical"></i> Call Campus Ambulance &amp; Health Center
+          </a>
+
+          <!-- Web Audio Siren Synthesizer -->
+          <button type="button" class="btn-siren-synthesizer" id="btn-toggle-siren">
+            <i class="fa-solid fa-bullhorn"></i> Sound Audible Alarm Siren (Deterrent)
+          </button>
+        </div>
+
+        <!-- Real-Time GPS Sharing -->
+        <div class="sos-gps-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <strong><i class="fa-solid fa-crosshairs"></i> Your Live Location</strong>
+            <button type="button" class="btn btn-outline btn-xs" id="btn-share-gps">
+              <i class="fa-solid fa-share-nodes"></i> Share / Copy Pin
+            </button>
+          </div>
+          <div id="sos-gps-details">
+            <span class="text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Initializing GPS coordinates...</span>
+          </div>
+        </div>
+
+        <div style="font-size:0.8rem; color:var(--slate-500); text-align:center;">
+          Remain calm &bull; Move towards the nearest illuminated corridor &bull; Security officers are on active patrol.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. BUILDING DETAILS MODAL -->
+  <div id="building-detail-modal" class="cs-modal-backdrop" role="dialog" aria-modal="true">
+    <div style="background:var(--white); border-radius:var(--radius-xl); max-width:540px; width:100%; padding:2.25rem; box-shadow:var(--shadow-lg); border:1px solid var(--slate-200);">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:1.25rem;">
+        <div>
+          <span id="modal-detail-code" class="badge badge-info">ACAD-01</span>
+          <h3 id="modal-detail-name" style="font-size:1.6rem; color:var(--navy-900); margin-top:0.25rem;">Building Name</h3>
+        </div>
+        <button class="btn-icon" onclick="document.getElementById('building-detail-modal').classList.remove('active')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p id="modal-detail-desc" style="font-size:0.95rem; color:var(--slate-600); line-height:1.6; margin-bottom:1.5rem;"></p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; font-size:0.88rem;">
+        <div style="background:var(--slate-50); padding:0.85rem; border-radius:var(--radius-md); border:1px solid var(--slate-200);">
+          <strong style="color:var(--slate-500); display:block; font-size:0.75rem; text-transform:uppercase;">Operating Hours</strong>
+          <span id="modal-detail-hours" style="font-weight:700; color:var(--navy-900);">08:00 AM - 08:00 PM</span>
+        </div>
+        <div style="background:var(--slate-50); padding:0.85rem; border-radius:var(--radius-md); border:1px solid var(--slate-200);">
+          <strong style="color:var(--slate-500); display:block; font-size:0.75rem; text-transform:uppercase;">Floors &amp; Levels</strong>
+          <span id="modal-detail-floors" style="font-weight:700; color:var(--navy-900);">4 Floors</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <strong style="font-size:0.85rem; color:var(--slate-700); text-transform:uppercase; letter-spacing:0.03em;">Accessibility &amp; Amenities:</strong>
+        <p id="modal-detail-access" style="font-size:0.88rem; color:var(--teal-700); font-weight:600; margin:0.35rem 0 0.75rem;"></p>
+        <ul id="modal-detail-amenities" style="list-style:none; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.82rem; color:var(--slate-600);"></ul>
+      </div>
+
+      <div style="display:flex; gap:0.75rem;">
+        <button class="btn btn-outline" style="flex:1;" onclick="document.getElementById('building-detail-modal').classList.remove('active')">
+          Close
+        </button>
+        <button class="btn btn-primary" id="modal-detail-route-btn" style="flex:1.4;">
+          <i class="fa-solid fa-diamond-turn-right"></i> Set as Route Destination
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. ADMIN ADD/EDIT BUILDING MODAL -->
+  <div id="admin-building-modal" class="cs-modal-backdrop" role="dialog" aria-modal="true">
+    <div style="background:var(--white); border-radius:var(--radius-xl); max-width:580px; width:100%; padding:2.25rem; box-shadow:var(--shadow-lg); border:1px solid var(--slate-200); max-height:90vh; overflow-y:auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3 id="modal-building-title" style="font-size:1.4rem; color:var(--navy-900);">Add Campus Building</h3>
+        <button class="btn-icon" onclick="window.campusAdminManager.closeBuildingModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="building-modal-form">
+        <div class="form-grid-2">
+          <div class="input-group">
+            <label class="input-label" for="modal-bldg-name">Building Name *</label>
+            <input type="text" id="modal-bldg-name" class="custom-input" placeholder="e.g. Science Complex" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="modal-bldg-code">Code / Identifier</label>
+            <input type="text" id="modal-bldg-code" class="custom-input" placeholder="e.g. SCI-09">
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="input-group">
+            <label class="input-label" for="modal-bldg-category">Category *</label>
+            <select id="modal-bldg-category" class="custom-select" required>
+              <option value="Academic">Academic</option>
+              <option value="Facilities">Facilities &amp; Labs</option>
+              <option value="Administration">Administration</option>
+              <option value="Amenities">Amenities &amp; Food</option>
+              <option value="Access">Access / Parking / Gates</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="modal-bldg-hours">Operating Hours</label>
+            <input type="text" id="modal-bldg-hours" class="custom-input" placeholder="e.g. 08:00 AM - 08:00 PM">
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="input-group">
+            <label class="input-label" for="modal-bldg-lat">Latitude *</label>
+            <input type="number" step="0.0001" id="modal-bldg-lat" class="custom-input" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="modal-bldg-lng">Longitude *</label>
+            <input type="number" step="0.0001" id="modal-bldg-lng" class="custom-input" required>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="input-group">
+            <label class="input-label" for="modal-bldg-floors">Total Floors</label>
+            <input type="number" id="modal-bldg-floors" class="custom-input" value="3" min="1">
+          </div>
+          <div class="input-group" style="justify-content:center;">
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; margin-top:1.5rem;">
+              <input type="checkbox" id="modal-bldg-accessible" checked style="width:18px; height:18px; accent-color:var(--teal-600);">
+              <span style="font-size:0.85rem; font-weight:600; color:var(--navy-900);">Wheelchair Accessible</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group-full input-group">
+          <label class="input-label" for="modal-bldg-amenities">Amenities (Comma-separated)</label>
+          <input type="text" id="modal-bldg-amenities" class="custom-input" placeholder="Elevator, Restrooms, Ramps, Wi-Fi">
+        </div>
+
+        <div class="form-group-full input-group">
+          <label class="input-label" for="modal-bldg-desc">Description</label>
+          <textarea id="modal-bldg-desc" class="custom-textarea" rows="2" placeholder="Facility purpose and key services..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+          <button type="button" class="btn btn-outline" onclick="window.campusAdminManager.closeBuildingModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Building</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. ADMIN ADD/EDIT SECURITY POINT MODAL -->
+  <div id="admin-security-modal" class="cs-modal-backdrop" role="dialog" aria-modal="true">
+    <div style="background:var(--white); border-radius:var(--radius-xl); max-width:560px; width:100%; padding:2.25rem; box-shadow:var(--shadow-lg); border:1px solid var(--slate-200);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3 id="modal-security-title" style="font-size:1.4rem; color:var(--navy-900);">Add Security Point</h3>
+        <button class="btn-icon" onclick="window.campusAdminManager.closeSecurityModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="security-modal-form">
+        <div class="form-grid-2">
+          <div class="input-group">
+            <label class="input-label" for="modal-sec-name">Post / Kiosk Name *</label>
+            <input type="text" id="modal-sec-name" class="custom-input" placeholder="e.g. South Campus Booth" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="modal-sec-type">Type *</label>
+            <select id="modal-sec-type" class="custom-select" required>
+              <option value="Guard Post">Guard Post</option>
+              <option value="Help Point">Help Point</option>
+              <option value="SOS Call Box">SOS Call Box</option>
+              <option value="Patrol Booth">Patrol Booth</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="input-group">
+            <label class="input-label" for="modal-sec-lat">Latitude *</label>
+            <input type="number" step="0.0001" id="modal-sec-lat" class="custom-input" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="modal-sec-lng">Longitude *</label>
+            <input type="number" step="0.0001" id="modal-sec-lng" class="custom-input" required>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="input-group">
+            <label class="input-label" for="modal-sec-phone">Emergency Phone *</label>
+            <input type="text" id="modal-sec-phone" class="custom-input" placeholder="+91 11 2659 1000" required>
+          </div>
+          <div class="input-group" style="justify-content:center;">
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; margin-top:1.5rem;">
+              <input type="checkbox" id="modal-sec-verified" checked style="width:18px; height:18px; accent-color:var(--teal-600);">
+              <span style="font-size:0.85rem; font-weight:600; color:var(--navy-900);">Verified Active Post</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group-full input-group">
+          <label class="input-label" for="modal-sec-desc">Description &amp; Amenities</label>
+          <textarea id="modal-sec-desc" class="custom-textarea" rows="2" placeholder="e.g. Manned 24x7 with emergency first aid kit..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+          <button type="button" class="btn btn-outline" onclick="window.campusAdminManager.closeSecurityModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Security Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. ADMIN ADD/EDIT WELL-LIT PATHWAY MODAL -->
+  <div id="admin-pathway-modal" class="cs-modal-backdrop" role="dialog" aria-modal="true">
+    <div style="background:var(--white); border-radius:var(--radius-xl); max-width:560px; width:100%; padding:2.25rem; box-shadow:var(--shadow-lg); border:1px solid var(--slate-200);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3 style="font-size:1.4rem; color:var(--navy-900);">Add Well-Lit Night Corridor</h3>
+        <button class="btn-icon" onclick="window.campusAdminManager.closePathwayModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="pathway-modal-form">
+        <div class="input-group" style="margin-bottom:1rem;">
+          <label class="input-label" for="modal-path-name">Pathway Corridor Name *</label>
+          <input type="text" id="modal-path-name" class="custom-input" placeholder="e.g. Hostel to Library High-Mast Walkway" required>
+        </div>
+
+        <div class="form-grid-2" style="margin-bottom:1rem;">
+          <div class="input-group">
+            <label class="input-label" for="modal-path-score">Safety Score (1-100) *</label>
+            <input type="number" id="modal-path-score" class="custom-input" value="95" min="1" max="100" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="modal-path-desc">Description</label>
+            <input type="text" id="modal-path-desc" class="custom-input" placeholder="e.g. Continuous high-mast LED floodlights">
+          </div>
+        </div>
+
+        <div class="form-group-full input-group" style="margin-bottom:1.5rem;">
+          <label class="input-label" for="modal-path-coords">Coordinate Points (JSON Array or Lat, Lng pairs per line) *</label>
+          <textarea id="modal-path-coords" class="custom-textarea" rows="4" placeholder="[[28.543, 77.192], [28.545, 77.193]]" required></textarea>
+          <small class="text-muted">Enter at least 2 latitude/longitude pairs along the path route.</small>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+          <button type="button" class="btn btn-outline" onclick="window.campusAdminManager.closePathwayModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Safe Pathway</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. ADMIN ADD/EDIT EMERGENCY CONTACT MODAL -->
+  <div id="admin-contact-modal" class="cs-modal-backdrop" role="dialog" aria-modal="true">
+    <div style="background:var(--white); border-radius:var(--radius-xl); max-width:540px; width:100%; padding:2.25rem; box-shadow:var(--shadow-lg); border:1px solid var(--slate-200);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3 id="modal-contact-title" style="font-size:1.4rem; color:var(--navy-900);">Add Emergency Contact</h3>
+        <button class="btn-icon" onclick="window.campusAdminManager.closeContactModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="contact-modal-form">
+        <div class="input-group" style="margin-bottom:1rem;">
+          <label class="input-label" for="modal-contact-name">Authority / Officer / Unit Name *</label>
+          <input type="text" id="modal-contact-name" class="custom-input" placeholder="e.g. Chief Security Officer" required>
+        </div>
+
+        <div class="form-grid-2" style="margin-bottom:1rem;">
+          <div class="input-group">
+            <label class="input-label" for="modal-contact-phone">Telephone Hotline *</label>
+            <input type="text" id="modal-contact-phone" class="custom-input" placeholder="+91 11 2659 1000" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="modal-contact-role">Role / Responsibilities</label>
+            <input type="text" id="modal-contact-role" class="custom-input" placeholder="e.g. 24x7 Security Control">
+          </div>
+        </div>
+
+        <div class="form-grid-2" style="margin-bottom:1rem;">
+          <div class="input-group">
+            <label class="input-label" for="modal-contact-location">Location / Office</label>
+            <input type="text" id="modal-contact-location" class="custom-input" placeholder="e.g. Main Gate Building">
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="modal-contact-badge">Badge Label</label>
+            <input type="text" id="modal-contact-badge" class="custom-input" placeholder="e.g. 24x7 Active">
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-bottom:1.5rem;">
+          <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+            <input type="checkbox" id="modal-contact-primary" style="width:18px; height:18px; accent-color:var(--teal-600);">
+            <span style="font-size:0.85rem; font-weight:600; color:var(--navy-900);">Set as Primary SOS Hotline (Linked to Emergency SOS Modal)</span>
+          </label>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+          <button type="button" class="btn btn-outline" onclick="window.campusAdminManager.closeContactModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Contact</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 7. FIRST-TIME USER WALKTHROUGH & QUICK GUIDE MODAL -->
+  <div id="user-guide-modal" class="cs-modal-backdrop" role="dialog" aria-modal="true">
+    <div style="background:var(--white); border-radius:var(--radius-xl); max-width:620px; width:100%; padding:2.5rem; box-shadow:var(--shadow-lg); border:1px solid var(--slate-200); position:relative;">
+      <button class="btn-icon" style="position:absolute; top:20px; right:20px;" onclick="document.getElementById('user-guide-modal').classList.remove('active')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div style="text-align:center; margin-bottom:2rem;">
+        <div class="brand-icon-shield" style="margin:0 auto 1rem; width:52px; height:52px; font-size:1.6rem;">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 style="font-size:1.75rem; color:var(--navy-900);">Welcome to Campus Saathi</h3>
+        <p style="color:var(--teal-700); font-weight:600;">"Find Your Way. Feel Safer. Speak Up."</p>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:1.25rem; margin-bottom:2rem;">
+        <div style="display:flex; gap:1rem; align-items:flex-start;">
+          <div style="width:36px; height:36px; border-radius:50%; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">1</div>
+          <div>
+            <h5 style="font-size:1rem; color:var(--navy-900); margin-bottom:0.25rem;">Smart Campus Navigation</h5>
+            <p style="font-size:0.85rem; color:var(--slate-600);">Search any of the 10 university buildings, select starting and destination points, and get turn-by-turn walking directions along realistic campus walkways.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:1rem; align-items:flex-start;">
+          <div style="width:36px; height:36px; border-radius:50%; background:var(--teal-50); color:var(--teal-700); display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">2</div>
+          <div>
+            <h5 style="font-size:1rem; color:var(--navy-900); margin-bottom:0.25rem;">Well-Lit Night Corridors</h5>
+            <p style="font-size:0.85rem; color:var(--slate-600);">Walking after dark? Enable the "Prioritize Well-Lit Paths" toggle to route through illuminated avenues with 24x7 security posts and active CCTV.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:1rem; align-items:flex-start;">
+          <div style="width:36px; height:36px; border-radius:50%; background:#FEF2F2; color:var(--danger); display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">3</div>
+          <div>
+            <h5 style="font-size:1rem; color:var(--navy-900); margin-bottom:0.25rem;">Emergency SOS &amp; Siren</h5>
+            <p style="font-size:0.85rem; color:var(--slate-600);">Click the red EMERGENCY SOS button anywhere on the site to trigger 1-touch security dispatch, sound an audible distress siren, and broadcast your exact GPS pin.</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:1rem; align-items:flex-start;">
+          <div style="width:36px; height:36px; border-radius:50%; background:#FDF4FF; color:#A21CAF; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">4</div>
+          <div>
+            <h5 style="font-size:1rem; color:var(--navy-900); margin-bottom:0.25rem;">Statutory Anti-Ragging Whistleblower</h5>
+            <p style="font-size:0.85rem; color:var(--slate-600);">Submit complaints confidentially or 100% anonymously. Receive a unique tracking reference code to check proctorial inquiry progress securely.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:center;">
+        <button type="button" class="btn btn-primary btn-lg" onclick="document.getElementById('user-guide-modal').classList.remove('active')">
+          <i class="fa-solid fa-compass"></i> Start Exploring Campus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Stack -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ====================================================
+       FOOTER
+       ==================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+            <div class="brand-icon-shield"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3 style="margin:0; font-size:1.5rem;">Campus <span style="color:var(--teal-400)">Saathi</span></h3>
+          </div>
+          <p>
+            <strong>"Your campus, Your safety"</strong><br>
+            <em>"Find Your Way. Feel Safer. Speak Up."</em><br>
+            A smart, unified student safety and campus navigation platform connecting buildings, verified well-lit night paths, emergency response, and statutory anti-ragging protections.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="#home" onclick="window.campusApp.navigateToTab('home')">Home</a></li>
+            <li><a href="#navigation" onclick="window.campusApp.navigateToTab('navigation')">Interactive Campus Map</a></li>
+            <li><a href="#navigation" onclick="window.campusApp.navigateToTab('navigation')">Building Directory</a></li>
+            <li><a href="#navigation" onclick="window.campusApp.navigateToTab('navigation')">Walking Directions</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Campus Safety</h4>
+          <ul class="footer-links">
+            <li><a href="#safety" onclick="window.campusApp.navigateToTab('safety')">Verified Security Kiosks</a></li>
+            <li><a href="#safety" onclick="window.campusApp.navigateToTab('safety')">Report Unsafe Infrastructure</a></li>
+            <li><a href="#antiragging" onclick="window.campusApp.navigateToTab('antiragging')">Anti-Ragging Support</a></li>
+            <li><a href="#dashboard" onclick="window.campusApp.navigateToTab('dashboard')">Student Dashboard</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>24x7 Emergency Helplines</h4>
+          <ul class="footer-links" style="font-size:0.85rem;">
+            <li><strong>Campus Security:</strong> +91 11 2659 1000</li>
+            <li><strong>Women's Helpline:</strong> +91 98765 43210 (1091)</li>
+            <li><strong>Medical Health Center:</strong> +91 11 2659 1100 (102)</li>
+            <li><strong>National Anti-Ragging:</strong> 1800-180-5522</li>
+            <li><strong>Civil Police:</strong> 112 / 100</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          &copy; 2026 Campus Saathi &bull; All Rights Reserved &bull; Compliant with UGC &amp; Statutory Campus Safety Guidelines.
+        </div>
+        <div style="display:flex; gap:1.25rem;">
+          <a href="#about" onclick="window.campusApp.navigateToTab('about')">About Us</a>
+          <a href="#contact" onclick="window.campusApp.navigateToTab('contact')">Contact Support</a>
+          <a href="#admin" onclick="window.campusApp.navigateToTab('admin')">Admin Console</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Leaflet JS Library -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Application Modules -->
+  <script src="js/config.js"></script>
+  <script src="js/firebase-service.js"></script>
+  <script src="js/map-service.js"></script>
+  <script src="js/navigation.js"></script>
+  <script src="js/safety.js"></script>
+  <script src="js/sos.js"></script>
+  <script src="js/antiragging.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
